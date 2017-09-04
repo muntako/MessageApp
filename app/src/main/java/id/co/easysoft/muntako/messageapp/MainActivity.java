@@ -20,7 +20,6 @@ public class MainActivity extends AppCompatActivity implements ConnectingFragmen
         public void onReceiveClient(Client c);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,14 +30,13 @@ public class MainActivity extends AppCompatActivity implements ConnectingFragmen
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void replaceFragment(Fragment fragment){
         Class fragmentClass = fragment.getClass();
         Fragment f = null;
         try{
             f = (Fragment) fragmentClass.newInstance();
 
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (Exception  e) {
             e.printStackTrace();
             Log.e(TAG,e.toString());
         }

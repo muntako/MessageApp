@@ -1,5 +1,7 @@
 package id.co.easysoft.muntako.messageapp;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -94,10 +96,20 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         buttonSend.setOnClickListener(this);
         return view;
     }
+    @TargetApi(23)
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         activity = (MainActivity) context;
+        myClient = activity.getMyClient();
+        myClient.setOnMessageSent(this);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onAttach(Activity a) {
+        super.onAttach(activity);
+        this.activity = (MainActivity) a;
         myClient = activity.getMyClient();
         myClient.setOnMessageSent(this);
         setHasOptionsMenu(true);
@@ -191,17 +203,18 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     }
 
     //Adding logout option here
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.menuLogout) {
             disconnecting();
+        }else if (id == R.id.action_list_contact){
+//            activity.replaceFragment();
+
         }
         return super.onOptionsItemSelected(item);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void disconnecting() {
         if (myClient != null) {
             myClient.disconnect();

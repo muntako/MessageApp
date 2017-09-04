@@ -1,5 +1,7 @@
 package id.co.easysoft.muntako.messageapp;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -24,7 +26,6 @@ import butterknife.OnClick;
 
 /**
  * Created by easysoft on 30/08/17.
- *
  */
 
 public class ConnectingFragment extends Fragment implements Client.onConnectingSuccess {
@@ -57,11 +58,23 @@ public class ConnectingFragment extends Fragment implements Client.onConnectingS
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        activity = (MainActivity) context;
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        this.activity = (MainActivity) activity;
         dialog = new ProgressDialog(activity);
     }
+
+    @TargetApi(23)
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (activity == null) {
+            activity = (MainActivity) getActivity();
+        }
+        dialog = new ProgressDialog(activity);
+    }
+
 
     @OnClick(R.id.connectButton)
     public void connecting() {
@@ -88,14 +101,16 @@ public class ConnectingFragment extends Fragment implements Client.onConnectingS
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
-    public void connect(boolean success,String response) {
-        dialog.dismiss();
+    public void connect(boolean success, String response) {
+        if (dialog != null)
+            dialog.dismiss();
         if (success) {
             Toast.makeText(activity, "Connected", Toast.LENGTH_SHORT).show();
             activity.replaceFragment(new ChatRoomFragment());
 //            startActivity(new Intent(activity,ChatRoomFragment.class));
+        }else {
+            Toast.makeText(activity,response,Toast.LENGTH_SHORT).show();
         }
     }
 
