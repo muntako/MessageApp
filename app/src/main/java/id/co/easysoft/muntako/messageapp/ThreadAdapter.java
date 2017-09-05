@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import id.co.easysoft.muntako.messageapp.model.Message;
+
 /**
  * Created by Belal on 5/29/2016.
  */

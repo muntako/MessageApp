@@ -1,14 +1,14 @@
-package id.co.easysoft.muntako.messageapp;
+package id.co.easysoft.muntako.messageapp.Fragment;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.os.Build;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +23,11 @@ import org.json.JSONObject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import id.co.easysoft.muntako.messageapp.Client;
+import id.co.easysoft.muntako.messageapp.MainActivity;
+import id.co.easysoft.muntako.messageapp.R;
+
+import static android.content.Context.WIFI_SERVICE;
 
 /**
  * Created by easysoft on 30/08/17.
@@ -79,10 +84,11 @@ public class ConnectingFragment extends Fragment implements Client.onConnectingS
     @OnClick(R.id.connectButton)
     public void connecting() {
         jsonData = new JSONObject();
-
+        WifiManager wm = (WifiManager) activity.getSystemService(WIFI_SERVICE);
+        String ipAddress = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
         try {
             jsonData.put("request", Client.REQUEST_CONNECT_CLIENT);
-
+            jsonData.put("ipAddress",ipAddress);
         } catch (JSONException e) {
             e.printStackTrace();
             Log.e(TAG, "can't put request");

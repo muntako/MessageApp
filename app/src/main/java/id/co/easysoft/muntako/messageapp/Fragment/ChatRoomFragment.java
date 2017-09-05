@@ -1,17 +1,16 @@
-package id.co.easysoft.muntako.messageapp;
+package id.co.easysoft.muntako.messageapp.Fragment;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
+import android.content.DialogInterface;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -25,18 +24,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import id.co.easysoft.muntako.messageapp.MainActivity.activeClient;
+import id.co.easysoft.muntako.messageapp.Client;
+import id.co.easysoft.muntako.messageapp.MainActivity;
+import id.co.easysoft.muntako.messageapp.model.Message;
+import id.co.easysoft.muntako.messageapp.R;
+import id.co.easysoft.muntako.messageapp.ThreadAdapter;
 
 import static android.content.Context.WIFI_SERVICE;
 
@@ -63,7 +64,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     Client myClient;
     private String TAG = "Chat Activity";
     MainActivity activity;
-    String ipAddress ="";
+    String ipAddressDestination ="", nickname= "";
 
     @Nullable
     @Override
@@ -72,8 +73,6 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         //Adding toolbar to activity
         Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
         activity.setSupportActionBar(toolbar);
-
-
         //Initializing recyclerview
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
         recyclerView.setHasFixedSize(true);
@@ -84,7 +83,6 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         //Initializing message arraylist
         messages = new ArrayList<>();
 
-
         //Calling function to fetch the existing messages on the thread
         fetchMessages();
 
@@ -94,6 +92,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
 
         //Adding listener to button
         buttonSend.setOnClickListener(this);
+        displayDestinationForm();
         return view;
     }
     @TargetApi(23)
@@ -104,6 +103,24 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         myClient = activity.getMyClient();
         myClient.setOnMessageSent(this);
         setHasOptionsMenu(true);
+    }
+
+    void displayDestinationForm(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        View view = LayoutInflater.from(activity).inflate(R.layout.fragment_contact,null);
+        final TextView ipAddressTest = (TextView) view.findViewById(R.id.addressEditText);
+        final TextView nickNameText = (TextView)view.findViewById(R.id.nicknameEditText) ;
+        builder.setView(view);
+        builder.setTitle("Chat Setting");
+        builder.setCancelable(false);
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                ipAddressDestination = ipAddressTest.getText().toString();
+                nickname = nickNameText.getText().toString();
+                dialog.dismiss();
+            }
+        }).create().show();
     }
 
     @Override
@@ -154,6 +171,9 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
                 jsonData.put("request", Client.SEND_MESSAGE_CLIENT);
                 jsonData.put("Message", message);
                 jsonData.put("ipAddress", ipAddress);
+                jsonData.put("nickname",nickname);
+                jsonData.put("Destination",ipAddressDestination);
+
             } catch (JSONException e) {
                 e.printStackTrace();
                 Log.e(TAG, "can't put request");
@@ -222,7 +242,6 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void connect(boolean success, String response) {
         if (!success){

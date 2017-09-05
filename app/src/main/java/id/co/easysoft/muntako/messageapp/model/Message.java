@@ -1,7 +1,8 @@
-package id.co.easysoft.muntako.messageapp;
+package id.co.easysoft.muntako.messageapp.model;
 
 /**
  * Created by ADMIN on 31-Aug-17.
+ *
  */
 
 public class Message {

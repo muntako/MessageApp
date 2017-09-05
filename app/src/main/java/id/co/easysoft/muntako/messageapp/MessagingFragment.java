@@ -21,6 +21,7 @@ import org.json.JSONObject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import id.co.easysoft.muntako.messageapp.Fragment.ConnectingFragment;
 
 /**
  * Created by easysoft on 30/08/17.

@@ -1,15 +1,13 @@
 package id.co.easysoft.muntako.messageapp;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import butterknife.ButterKnife;
+import id.co.easysoft.muntako.messageapp.Fragment.ConnectingFragment;
 
 public class MainActivity extends AppCompatActivity implements ConnectingFragment.onClientCreated{
 
