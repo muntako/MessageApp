@@ -25,6 +25,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,12 +37,14 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import id.co.easysoft.muntako.messageapp.Client;
+import id.co.easysoft.muntako.messageapp.Client.onConnectionChange;
 import id.co.easysoft.muntako.messageapp.MainActivity;
 import id.co.easysoft.muntako.messageapp.model.Message;
 import id.co.easysoft.muntako.messageapp.R;
 import id.co.easysoft.muntako.messageapp.ThreadAdapter;
 
 import static android.content.Context.WIFI_SERVICE;
+import static id.co.easysoft.muntako.messageapp.Constant.SEND_MESSAGE_CLIENT;
 
 /**
  * Created by ADMIN on 31-Aug-17.
@@ -47,7 +52,7 @@ import static android.content.Context.WIFI_SERVICE;
  */
 
 public class ChatRoomFragment extends Fragment implements View.OnClickListener, Client.onMessageSent,
-        Client.onConnectingSuccess{
+        Client.onReceiveMessage,Client.onConnectionChange{
     //Recyclerview objects
     private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
@@ -64,12 +69,12 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     Client myClient;
     private String TAG = "Chat Activity";
     MainActivity activity;
-    String ipAddressDestination ="", nickname= "";
+    String ipAddressDestination = "", nickname = "";
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_chat_room,container,false);
+        View view = inflater.inflate(R.layout.activity_chat_room, container, false);
         //Adding toolbar to activity
         Toolbar toolbar = (Toolbar) view.findViewById(R.id.toolbar);
         activity.setSupportActionBar(toolbar);
@@ -78,7 +83,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new ThreadAdapter(activity,messages,1);
+        adapter = new ThreadAdapter(activity, messages, 1);
 
         //Initializing message arraylist
         messages = new ArrayList<>();
@@ -95,6 +100,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         displayDestinationForm();
         return view;
     }
+
     @TargetApi(23)
     @Override
     public void onAttach(Context context) {
@@ -102,14 +108,15 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         activity = (MainActivity) context;
         myClient = activity.getMyClient();
         myClient.setOnMessageSent(this);
+        myClient.setOnReceiveMessage(this);
         setHasOptionsMenu(true);
+        nickname = activity.getNickname();
     }
 
-    void displayDestinationForm(){
+    void displayDestinationForm() {
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        View view = LayoutInflater.from(activity).inflate(R.layout.fragment_contact,null);
+        View view = LayoutInflater.from(activity).inflate(R.layout.fragment_contact, null);
         final TextView ipAddressTest = (TextView) view.findViewById(R.id.addressEditText);
-        final TextView nickNameText = (TextView)view.findViewById(R.id.nicknameEditText) ;
         builder.setView(view);
         builder.setTitle("Chat Setting");
         builder.setCancelable(false);
@@ -117,7 +124,6 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 ipAddressDestination = ipAddressTest.getText().toString();
-                nickname = nickNameText.getText().toString();
                 dialog.dismiss();
             }
         }).create().show();
@@ -129,7 +135,9 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         this.activity = (MainActivity) a;
         myClient = activity.getMyClient();
         myClient.setOnMessageSent(this);
+        myClient.setOnReceiveMessage(this);
         setHasOptionsMenu(true);
+        nickname = activity.getNickname();
     }
 
     //This method will fetch all the messages of the thread
@@ -148,41 +156,26 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     }
 
     //This method will send the new message to the thread
-    private void sendMessage()  {
-        JSONObject jsonData;
+    private void sendMessage() {
+        String jsonData;
 
         long time = System.currentTimeMillis();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
-        Date resultdate = new Date(time);
-        String sentAt = sdf.format(resultdate);
+        long sentAt = time;
         int userId = 1;
-        String name = "muntako";
+        String name = activity.getNickname();
         WifiManager wm = (WifiManager) activity.getSystemService(WIFI_SERVICE);
         String ipAddress = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
 
 
         final String message = editTextMessage.getText().toString().trim();
         if (!message.equalsIgnoreCase("")) {
-            Message m = new Message(userId, message, sentAt, name);
+            Message m = new Message(userId, message, sentAt, nickname);
 
-            jsonData = new JSONObject();
-
-            try {
-                jsonData.put("request", Client.SEND_MESSAGE_CLIENT);
-                jsonData.put("Message", message);
-                jsonData.put("ipAddress", ipAddress);
-                jsonData.put("nickname",nickname);
-                jsonData.put("Destination",ipAddressDestination);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-                Log.e(TAG, "can't put request");
-                return;
-            }
-
+            RequestToServer toServer = new RequestToServer(SEND_MESSAGE_CLIENT,ipAddress,message,ipAddressDestination,nickname,sentAt+"");
+            jsonData = new Gson().toJson(toServer);
             myClient.setJsonData(jsonData);
             myClient.setOnMessageSent(this);
-
+            System.out.println("Request "+toServer);
             messages.add(m);
             adapter.notifyDataSetChanged();
 
@@ -190,7 +183,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
             adapter.setMessages(messages);
 
             editTextMessage.setText("");
-        }else {
+        } else {
             return;
         }
     }
@@ -203,9 +196,8 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     }
 
     //This method will return current timestamp
-    public static String getTimeStamp() {
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm");
-        return format.format(new Date());
+    public static long getTimeStamp() {
+        return System.currentTimeMillis();
     }
 
     //Sending message onclick
@@ -228,9 +220,8 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         int id = item.getItemId();
         if (id == R.id.menuLogout) {
             disconnecting();
-        }else if (id == R.id.action_list_contact){
-//            activity.replaceFragment();
-
+        } else if (id == R.id.action_list_contact) {
+            displayDestinationForm();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -238,30 +229,41 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     public void disconnecting() {
         if (myClient != null) {
             myClient.disconnect();
-            activity.replaceFragment(new ConnectingFragment());
         }
+        activity.replaceFragment(new ConnectingFragment());
     }
 
     @Override
-    public void connect(boolean success, String response) {
-        if (!success){
-            activity.replaceFragment(new ConnectingFragment());
-        }
-    }
-
-    @Override
-    public void getResponse(boolean success, final String message) {
-        if (success){
+    public void doAction(boolean success, final String message) {
+        if (success) {
             activity.runOnUiThread(new Runnable() {
 
                 @Override
                 public void run() {
-                    processMessage("response", message, "0");
+//                    processMessage("response", message, "0");
+                    adapter.setDelivered(message);
+//                    Toast.makeText(activity,"double checklis",Toast.LENGTH_SHORT).show();
                     //TODO implement on message delivered to server, messaga single check
-//                    adapter
                 }
             });
         }
     }
 
+    @Override
+    public void showMessage(final String nickname, final String message) {
+        activity.runOnUiThread(new Runnable() {
+
+            @Override
+            public void run() {
+                processMessage(nickname, message, "0");
+            }
+        });
+    }
+
+    @Override
+    public void connect(boolean success, String response) {
+        if (!success){
+            disconnecting();
+        }
+    }
 }

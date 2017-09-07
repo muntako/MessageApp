@@ -8,14 +8,16 @@ package id.co.easysoft.muntako.messageapp.model;
 public class Message {
     private int usersId;
     private String message;
-    private String sentAt;
+    private long sentAt;
     private String name;
+    private boolean isDelivered;
 
-    public Message(int usersId, String message, String sentAt, String name) {
+    public Message(int usersId, String message, long sentAt, String name) {
         this.usersId = usersId;
         this.message = message;
         this.sentAt = sentAt;
         this.name = name;
+        this.isDelivered = false;
     }
 
     public int getUsersId() {
@@ -26,11 +28,19 @@ public class Message {
         return message;
     }
 
-    public String getSentAt() {
+    public long getSentAt() {
         return sentAt;
     }
 
     public String getName() {
         return name;
+    }
+
+    public boolean isDelivered() {
+        return isDelivered;
+    }
+
+    public void setDelivered(boolean delivered) {
+        isDelivered = delivered;
     }
 }

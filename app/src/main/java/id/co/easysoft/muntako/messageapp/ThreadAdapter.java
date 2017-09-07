@@ -8,12 +8,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import id.co.easysoft.muntako.messageapp.model.Message;
 
 /**
  * Created by Belal on 5/29/2016.
+ *
  */
 //Class extending RecyclerviewAdapter
 public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder> {
@@ -27,9 +30,10 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
 
     //ArrayList of messages object containing all the messages in the thread
     private ArrayList<Message> messages;
+    private ViewGroup parent;
 
     //Constructor
-    public ThreadAdapter(Context context, ArrayList<Message> messages, int userId){
+    public ThreadAdapter(Context context, ArrayList<Message> messages, int userId) {
         this.userId = userId;
         this.messages = messages;
         this.context = context;
@@ -55,12 +59,12 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
         //Creating view
         View itemView = null;
         //if view type is self
+        this.parent = parent;
         if (viewType == SELF) {
             //Inflating the layout self
             itemView = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.chat_thread, parent, false);
-        }
-        else {
+        } else {
             //else inflating the layout others
             itemView = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.chat_room_other, parent, false);
@@ -70,11 +74,21 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
         //Adding messages to the views
         Message message = messages.get(position);
         holder.textViewMessage.setText(message.getMessage());
-        holder.textViewTime.setText(message.getSentAt());
+
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        Date resultdate = new Date(message.getSentAt());
+
+        holder.textViewTime.setText(sdf.format(resultdate));
+
+        if (holder.getItemViewType() == SELF) {
+           holder.status.setEnabled(message.isDelivered());
+        }else {
+            holder.textViewSender.setText(message.getName());
+        }
     }
 
 
@@ -84,18 +98,36 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
     }
 
     //Initializing views
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
         TextView textViewMessage;
-        TextView textViewTime;
+        TextView textViewTime,textViewSender;
         ImageView status;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             textViewMessage = (TextView) itemView.findViewById(R.id.textViewMessage);
             textViewTime = (TextView) itemView.findViewById(R.id.textViewTime);
             status = (ImageView) itemView.findViewById(R.id.status);
+            textViewSender = (TextView)itemView.findViewById(R.id.TextViewSender);
+
+//            status.setEnabled(false);
+        }
+
+        onMessageSent onMessageSent;
+
+        public ThreadAdapter.onMessageSent getOnMessageSent() {
+            return onMessageSent;
+        }
+
+        public void setOnMessageSent(ThreadAdapter.onMessageSent onMessageSent) {
+            this.onMessageSent = onMessageSent;
         }
     }
+
+    interface onMessageSent {
+        void changeStatus(boolean b);
+    }
+
 
     public int getUserId() {
         return userId;
@@ -114,10 +146,19 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
         notifyDataSetChanged();
     }
 
-    public boolean setDelivered(String message){
-        if (true){
 
+    public boolean setDelivered(String id) {
+        for (int i = 0; i < messages.size(); i++) {
+            if ((messages.get(i).getSentAt()+"").equalsIgnoreCase(id)) {
+//                View itemView = parent.getChildAt(i);
+//                ImageView imageView = (ImageView) itemView.findViewById(R.id.status);
+//                imageView.setEnabled(true);
+                messages.get(i).setDelivered(true);
+                notifyDataSetChanged();
+            }
         }
-        return true;
+        return false;
     }
+
+
 }

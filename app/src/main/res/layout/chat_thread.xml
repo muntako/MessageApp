@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingLeft="50dp"
     android:paddingRight="@dimen/activity_horizontal_margin">
 
     <!-- For self Message -->
@@ -50,7 +50,7 @@
                     android:layout_height="10dp"
                     android:layout_alignParentEnd="true"
                     android:layout_gravity="end|bottom"
-                    android:src="@drawable/ic_check" />
+                    android:src="@drawable/selector_status_delivered"/>
             </LinearLayout>
 
         </LinearLayout>

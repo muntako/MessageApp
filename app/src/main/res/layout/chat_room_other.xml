@@ -6,7 +6,16 @@
     android:paddingRight="50dp"
     android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/TextViewSender"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        android:text="Sender" />
+
     <LinearLayout
+        android:layout_below="@id/TextViewSender"
         android:backgroundTint="#d7d3f8"
         android:background="@drawable/rounded_corner"
         android:layout_width="wrap_content"
@@ -15,6 +24,8 @@
         android:elevation="5dp"
         android:orientation="vertical"
         android:padding="10dp">
+
+
 
         <TextView
             android:id="@+id/textViewMessage"

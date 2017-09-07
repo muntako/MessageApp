@@ -9,7 +9,6 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +16,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.json.JSONException;
+import com.google.gson.Gson;
+
 import org.json.JSONObject;
 
 import butterknife.BindView;
@@ -28,16 +28,20 @@ import id.co.easysoft.muntako.messageapp.MainActivity;
 import id.co.easysoft.muntako.messageapp.R;
 
 import static android.content.Context.WIFI_SERVICE;
+import static id.co.easysoft.muntako.messageapp.Constant.REQUEST_CONNECT_CLIENT;
 
 /**
  * Created by easysoft on 30/08/17.
+ *
  */
 
-public class ConnectingFragment extends Fragment implements Client.onConnectingSuccess {
+public class ConnectingFragment extends Fragment implements Client.onConnectionChange {
     @BindView(R.id.addressEditText)
     EditText editTextAddress;
     @BindView(R.id.portEditText)
     EditText editTextPort;
+    @BindView(R.id.nicknameEditText)
+    EditText editTextNickname;
     @BindView(R.id.connectButton)
     Button buttonConnect;
     ProgressDialog dialog;
@@ -47,12 +51,6 @@ public class ConnectingFragment extends Fragment implements Client.onConnectingS
 
     JSONObject jsonData;
     MainActivity activity;
-
-    public interface onClientCreated {
-        public void getClient(Client c);
-    }
-
-    public onClientCreated onClientCreated;
 
     @Nullable
     @Override
@@ -86,22 +84,17 @@ public class ConnectingFragment extends Fragment implements Client.onConnectingS
         jsonData = new JSONObject();
         WifiManager wm = (WifiManager) activity.getSystemService(WIFI_SERVICE);
         String ipAddress = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-        try {
-            jsonData.put("request", Client.REQUEST_CONNECT_CLIENT);
-            jsonData.put("ipAddress",ipAddress);
-        } catch (JSONException e) {
-            e.printStackTrace();
-            Log.e(TAG, "can't put request");
-            return;
-        }
-        if (editTextAddress.getText().length() > 0 && editTextPort.getText().length() > 0) {
+        RequestToServer toServer = new RequestToServer(REQUEST_CONNECT_CLIENT,ipAddress);
+        String request = new Gson().toJson(toServer);
+        if (editTextAddress.getText().length() > 0 && editTextPort.getText().length() > 0 && editTextNickname.getText().length()>0) {
             myClient = new Client(editTextAddress.getText()
                     .toString(), Integer.parseInt(editTextPort
-                    .getText().toString()), jsonData);
+                    .getText().toString()), request);
 
-            myClient.setOnConnectingSuccess(this);
+            myClient.setOnConnectionChange(this);
             activity.setMyClient(myClient);
             dialog.show();
+            activity.setNickname(editTextNickname.getText().toString());
         } else {
             Toast.makeText(getActivity(), "Please fill the filed", Toast.LENGTH_SHORT).show();
         }
@@ -114,17 +107,9 @@ public class ConnectingFragment extends Fragment implements Client.onConnectingS
         if (success) {
             Toast.makeText(activity, "Connected", Toast.LENGTH_SHORT).show();
             activity.replaceFragment(new ChatRoomFragment());
-//            startActivity(new Intent(activity,ChatRoomFragment.class));
         }else {
             Toast.makeText(activity,response,Toast.LENGTH_SHORT).show();
         }
     }
 
-    public ConnectingFragment.onClientCreated getOnClientCreated() {
-        return onClientCreated;
-    }
-
-    public void setOnClientCreated(onClientCreated onClientCreated) {
-        this.onClientCreated = onClientCreated;
-    }
 }

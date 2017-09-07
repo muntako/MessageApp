@@ -6,8 +6,6 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 
-import org.json.JSONObject;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -18,52 +16,56 @@ import java.net.UnknownHostException;
 import butterknife.OnClick;
 import id.co.easysoft.muntako.messageapp.model.ResponseFromServer;
 
+import static id.co.easysoft.muntako.messageapp.Constant.MESSAGE_DELIVERED;
+import static id.co.easysoft.muntako.messageapp.Constant.SEND_MESSAGE_CLIENT;
+
 public class Client {
 
-    String dstAddress;
-    int dstPort;
-    String response = "";
+    private String dstAddress;
+    private int dstPort;
+    private String response = "";
     TextView textResponse;
     private boolean connected = false;
     private Socket socket = null;
-    private JSONObject jsonData;
+    private String jsonData;
     private String TAG = "client";
     private boolean success;
     ResponseFromServer fromServer;
 
-
-    public static final String REQUEST_CONNECT_CLIENT = "request-connect-client";
-    public static final String SEND_MESSAGE_CLIENT = "send-Message-client";
-
-    public interface onConnectingSuccess {
+    public interface onConnectionChange {
         void connect(boolean success, String response);
     }
 
     public interface onMessageSent{
-        void getResponse(boolean success, String message);
+        void doAction(boolean success, String message);
     }
-    onConnectingSuccess onConnectingSuccess;
-    onMessageSent onMessageSent;
+
+    public interface onReceiveMessage{
+        void showMessage(String sender,String message);
+    }
+    private onConnectionChange onConnectionChange;
+    private onMessageSent onMessageSent;
+    private onReceiveMessage onReceiveMessage;
 
 
-    public Client(String addr, int port, JSONObject object) {
+    public Client(String addr, int port, String object) {
         dstAddress = addr;
         dstPort = port;
         jsonData = object;
         new connecting().execute();
     }
 
-    Client(JSONObject object) {
+    Client(String object) {
         jsonData = object;
         new sendMessage().execute();
     }
 
-    public void setJsonData(JSONObject jsonData) {
+    public void setJsonData(String jsonData) {
         this.jsonData = jsonData;
         new sendMessage().execute();
     }
 
-    class connecting extends AsyncTask<Void, Void, Boolean> {
+    private class connecting extends AsyncTask<Void, Void, Boolean> {
 
 
         @Override
@@ -80,8 +82,8 @@ public class Client {
                 dataInputStream = new DataInputStream(socket.getInputStream());
 
                 // transfer JSONObject as String to the server
-                dataOutputStream.writeUTF(jsonData.toString());
-                Log.i(TAG, "waiting for response from host" + jsonData.toString());
+                dataOutputStream.writeUTF(jsonData);
+                Log.i(TAG, "waiting for response from host" + jsonData);
 
                 // Thread will wait till server replies
                 response = dataInputStream.readUTF();
@@ -111,10 +113,10 @@ public class Client {
         protected void onPostExecute(Boolean aBoolean) {
             super.onPostExecute(aBoolean);
             if (success) {
-                onConnectingSuccess.connect(success, fromServer.getMessage());
+                onConnectionChange.connect(true, fromServer.getMessage());
                 new Thread(new alwaysListening()).start();
             }else {
-                onConnectingSuccess.connect(success,response);
+                onConnectionChange.connect(false,response);
             }
         }
     }
@@ -133,11 +135,11 @@ public class Client {
                             socket.getOutputStream());
 
                     // transfer JSONObject as String to the server
-                    dataOutputStream.writeUTF(jsonData.toString());
-                    Log.i(TAG, "waiting for response from host" + jsonData.toString());
+                    dataOutputStream.writeUTF(jsonData);
+                    Log.i(TAG, "waiting for response from host" + jsonData);
                 }
 
-//                onMessageSent.getResponse(success,fromServer.getMessage());
+//                onMessageSent.doAction(success,fromServer.getMessage());
 
             } catch (UnknownHostException e) {
                 // TODO Auto-generated catch block
@@ -173,7 +175,14 @@ public class Client {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    onMessageSent.getResponse(fromServer.isSuccess(), fromServer.getMessage());
+                    if (fromServer.getStatus().equalsIgnoreCase(MESSAGE_DELIVERED)){
+                        onMessageSent.doAction(fromServer.isSuccess(), fromServer.getIdMessage());
+                    }else if(fromServer.getStatus().equalsIgnoreCase(SEND_MESSAGE_CLIENT)){
+                        onConnectionChange.connect(fromServer.isSuccess(),fromServer.getMessage());
+                    }
+                    else {
+                        onReceiveMessage.showMessage(fromServer.getSender(),fromServer.getMessage());
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                     try {
@@ -183,6 +192,7 @@ public class Client {
                     }
                 }
             }
+            onConnectionChange.connect(false,"connection closed");
         }
     }
 
@@ -196,7 +206,7 @@ public class Client {
             try {
                 socket.close();
                 connected = false;
-                onConnectingSuccess.connect(connected,"Connection closed");
+                onConnectionChange.connect(false,"Connection closed");
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -208,10 +218,6 @@ public class Client {
         return response;
     }
 
-    public JSONObject getJsonData() {
-        return jsonData;
-    }
-
     public Client.onMessageSent getOnMessageSent() {
         return onMessageSent;
     }
@@ -220,12 +226,19 @@ public class Client {
         this.onMessageSent = onMessageSent;
     }
 
-    public Client.onConnectingSuccess getOnConnectingSuccess() {
-        return onConnectingSuccess;
+    public onConnectionChange getOnConnectionChange() {
+        return onConnectionChange;
     }
 
-    public void setOnConnectingSuccess(Client.onConnectingSuccess onConnectingSuccess) {
-        this.onConnectingSuccess = onConnectingSuccess;
+    public void setOnConnectionChange(onConnectionChange onConnectionChange) {
+        this.onConnectionChange = onConnectionChange;
     }
 
+    public Client.onReceiveMessage getOnReceiveMessage() {
+        return onReceiveMessage;
+    }
+
+    public void setOnReceiveMessage(Client.onReceiveMessage onReceiveMessage) {
+        this.onReceiveMessage = onReceiveMessage;
+    }
 }

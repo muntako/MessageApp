@@ -9,12 +9,13 @@ import android.util.Log;
 import butterknife.ButterKnife;
 import id.co.easysoft.muntako.messageapp.Fragment.ConnectingFragment;
 
-public class MainActivity extends AppCompatActivity implements ConnectingFragment.onClientCreated{
+public class MainActivity extends AppCompatActivity {
 
     Client myClient;
     private String TAG = "mainactivity";
+    String nickname;
 
-    public interface activeClient{
+    public interface activeClient {
         public void onReceiveClient(Client c);
     }
 
@@ -28,23 +29,18 @@ public class MainActivity extends AppCompatActivity implements ConnectingFragmen
 
     }
 
-    public void replaceFragment(Fragment fragment){
+    public void replaceFragment(Fragment fragment) {
         Class fragmentClass = fragment.getClass();
         Fragment f = null;
-        try{
+        try {
             f = (Fragment) fragmentClass.newInstance();
 
-        } catch (Exception  e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG,e.toString());
+            Log.e(TAG, e.toString());
         }
         FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.frame_layout,f).commit();
-    }
-
-    @Override
-    public void getClient(Client c) {
-        myClient = c;
+        transaction.replace(R.id.frame_layout, f).commit();
     }
 
     public Client getMyClient() {
@@ -53,5 +49,13 @@ public class MainActivity extends AppCompatActivity implements ConnectingFragmen
 
     public void setMyClient(Client myClient) {
         this.myClient = myClient;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
     }
 }
