@@ -17,6 +17,8 @@ import butterknife.OnClick;
 import id.co.easysoft.muntako.messageapp.model.ResponseFromServer;
 
 import static id.co.easysoft.muntako.messageapp.Constant.MESSAGE_DELIVERED;
+import static id.co.easysoft.muntako.messageapp.Constant.MESSAGE_HAS_BEEN_READ;
+import static id.co.easysoft.muntako.messageapp.Constant.REQUEST_CONNECT_CLIENT;
 import static id.co.easysoft.muntako.messageapp.Constant.SEND_MESSAGE_CLIENT;
 
 public class Client {
@@ -36,16 +38,22 @@ public class Client {
         void connect(boolean success, String response);
     }
 
-    public interface onMessageSent{
+    public interface onMessageRead {
+        void hasBeenRead(boolean read, String id);
+    }
+
+    public interface onMessageSent {
         void doAction(boolean success, String message);
     }
 
-    public interface onReceiveMessage{
-        void showMessage(String sender,String message);
+    public interface onReceiveMessage {
+        void showMessage(ResponseFromServer fromServer);
     }
+
     private onConnectionChange onConnectionChange;
     private onMessageSent onMessageSent;
     private onReceiveMessage onReceiveMessage;
+    private onMessageRead onMessageRead;
 
 
     public Client(String addr, int port, String object) {
@@ -87,7 +95,7 @@ public class Client {
 
                 // Thread will wait till server replies
                 response = dataInputStream.readUTF();
-                fromServer = new Gson().fromJson(response,ResponseFromServer.class);
+                fromServer = new Gson().fromJson(response, ResponseFromServer.class);
 
                 Log.i(TAG, "response " + response);
                 success = fromServer.isSuccess();
@@ -115,22 +123,20 @@ public class Client {
             if (success) {
                 onConnectionChange.connect(true, fromServer.getMessage());
                 new Thread(new alwaysListening()).start();
-            }else {
-                onConnectionChange.connect(false,response);
+            } else {
+                onConnectionChange.connect(false, response);
             }
         }
     }
 
     private class sendMessage extends AsyncTask<Void, Void, String> {
-        boolean success;
 
         @Override
         protected String doInBackground(Void... params) {
             DataOutputStream dataOutputStream = null;
             response = "";
-
             try {
-                if (socket != null&&socket.isConnected()&&!socket.isClosed()) {
+                if (socket != null && socket.isConnected() && !socket.isClosed()) {
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());
 
@@ -139,31 +145,31 @@ public class Client {
                     Log.i(TAG, "waiting for response from host" + jsonData);
                 }
 
-//                onMessageSent.doAction(success,fromServer.getMessage());
 
             } catch (UnknownHostException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
                 response = "UnknownHostException: " + e.toString();
-            } catch (SocketException e){
+            } catch (SocketException e) {
                 response = "SocketException: " + e.toString();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-                response = "IOException: " + e.getMessage()+e.getCause();
+                response = "IOException: " + e.getMessage() + e.getCause();
             }
-            Log.i("Server Response",response);
+            Log.i("Server Response", response);
             return null;
         }
     }
 
-    private class alwaysListening implements Runnable{
+    private class alwaysListening implements Runnable {
 
         DataInputStream dataInputStream = null;
+
         @Override
         public void run() {
 
-            while (socket != null&&socket.isConnected()&&!socket.isClosed()) {
+            while (socket != null && socket.isConnected() && !socket.isClosed()) {
                 try {
                     dataInputStream = new DataInputStream(socket.getInputStream());
                     // Thread will wait till server replies
@@ -175,13 +181,14 @@ public class Client {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    if (fromServer.getStatus().equalsIgnoreCase(MESSAGE_DELIVERED)){
+                    if (fromServer.getResponseKey().equalsIgnoreCase(MESSAGE_DELIVERED)) {
                         onMessageSent.doAction(fromServer.isSuccess(), fromServer.getIdMessage());
-                    }else if(fromServer.getStatus().equalsIgnoreCase(SEND_MESSAGE_CLIENT)){
-                        onConnectionChange.connect(fromServer.isSuccess(),fromServer.getMessage());
-                    }
-                    else {
-                        onReceiveMessage.showMessage(fromServer.getSender(),fromServer.getMessage());
+                    } else if (fromServer.getResponseKey().equalsIgnoreCase(REQUEST_CONNECT_CLIENT)) {
+                        onConnectionChange.connect(fromServer.isSuccess(), fromServer.getMessage());
+                    } else if (fromServer.getResponseKey().equalsIgnoreCase(MESSAGE_HAS_BEEN_READ)) {
+                        onMessageRead.hasBeenRead(fromServer.isSuccess(), fromServer.getIdMessage());
+                    } else {
+                        onReceiveMessage.showMessage(fromServer);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -192,7 +199,7 @@ public class Client {
                     }
                 }
             }
-            onConnectionChange.connect(false,"connection closed");
+            onConnectionChange.connect(false, "connection closed");
         }
     }
 
@@ -206,7 +213,7 @@ public class Client {
             try {
                 socket.close();
                 connected = false;
-                onConnectionChange.connect(false,"Connection closed");
+                onConnectionChange.connect(false, "Connection closed");
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -240,5 +247,13 @@ public class Client {
 
     public void setOnReceiveMessage(Client.onReceiveMessage onReceiveMessage) {
         this.onReceiveMessage = onReceiveMessage;
+    }
+
+    public Client.onMessageRead getOnMessageRead() {
+        return onMessageRead;
+    }
+
+    public void setOnMessageRead(Client.onMessageRead onMessageRead) {
+        this.onMessageRead = onMessageRead;
     }
 }

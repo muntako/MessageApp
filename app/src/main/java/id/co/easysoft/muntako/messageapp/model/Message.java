@@ -11,6 +11,7 @@ public class Message {
     private long sentAt;
     private String name;
     private boolean isDelivered;
+    private boolean hasBeenRead;
 
     public Message(int usersId, String message, long sentAt, String name) {
         this.usersId = usersId;
@@ -18,6 +19,7 @@ public class Message {
         this.sentAt = sentAt;
         this.name = name;
         this.isDelivered = false;
+        this.hasBeenRead = false;
     }
 
     public int getUsersId() {
@@ -42,5 +44,13 @@ public class Message {
 
     public void setDelivered(boolean delivered) {
         isDelivered = delivered;
+    }
+
+    public boolean isHasBeenRead() {
+        return hasBeenRead;
+    }
+
+    public void setHasBeenRead(boolean hasBeenRead) {
+        this.hasBeenRead = hasBeenRead;
     }
 }

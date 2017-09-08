@@ -26,7 +26,8 @@ public class RequestToServer {
         this.ipAddress = ipAddress;
     }
 
-    public RequestToServer(String requestKey, String ipAddress, String message, String destination, String nickname, String idRequest) {
+    public RequestToServer(String requestKey, String ipAddress, String message, String destination,
+                           String nickname, String idRequest) {
         this.requestKey = requestKey;
         this.ipAddress = ipAddress;
         this.message = message;

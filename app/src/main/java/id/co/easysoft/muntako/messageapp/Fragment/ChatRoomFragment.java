@@ -42,8 +42,10 @@ import id.co.easysoft.muntako.messageapp.MainActivity;
 import id.co.easysoft.muntako.messageapp.model.Message;
 import id.co.easysoft.muntako.messageapp.R;
 import id.co.easysoft.muntako.messageapp.ThreadAdapter;
+import id.co.easysoft.muntako.messageapp.model.ResponseFromServer;
 
 import static android.content.Context.WIFI_SERVICE;
+import static id.co.easysoft.muntako.messageapp.Constant.MESSAGE_HAS_BEEN_READ;
 import static id.co.easysoft.muntako.messageapp.Constant.SEND_MESSAGE_CLIENT;
 
 /**
@@ -52,7 +54,7 @@ import static id.co.easysoft.muntako.messageapp.Constant.SEND_MESSAGE_CLIENT;
  */
 
 public class ChatRoomFragment extends Fragment implements View.OnClickListener, Client.onMessageSent,
-        Client.onReceiveMessage,Client.onConnectionChange{
+        Client.onReceiveMessage,Client.onConnectionChange,Client.onMessageRead{
     //Recyclerview objects
     private RecyclerView recyclerView;
     private RecyclerView.LayoutManager layoutManager;
@@ -70,6 +72,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     private String TAG = "Chat Activity";
     MainActivity activity;
     String ipAddressDestination = "", nickname = "";
+    private String ipAddress;
 
     @Nullable
     @Override
@@ -109,6 +112,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         myClient = activity.getMyClient();
         myClient.setOnMessageSent(this);
         myClient.setOnReceiveMessage(this);
+        myClient.setOnMessageRead(this);
         setHasOptionsMenu(true);
         nickname = activity.getNickname();
     }
@@ -136,6 +140,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         myClient = activity.getMyClient();
         myClient.setOnMessageSent(this);
         myClient.setOnReceiveMessage(this);
+        myClient.setOnMessageRead(this);
         setHasOptionsMenu(true);
         nickname = activity.getNickname();
     }
@@ -159,12 +164,11 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     private void sendMessage() {
         String jsonData;
 
-        long time = System.currentTimeMillis();
-        long sentAt = time;
+        long sentAt = System.currentTimeMillis();
         int userId = 1;
         String name = activity.getNickname();
         WifiManager wm = (WifiManager) activity.getSystemService(WIFI_SERVICE);
-        String ipAddress = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+        ipAddress = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
 
 
         final String message = editTextMessage.getText().toString().trim();
@@ -209,8 +213,6 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        // TODO Add your menu entries here
-//        super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu, menu);
     }
 
@@ -240,30 +242,44 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
 
                 @Override
                 public void run() {
-//                    processMessage("response", message, "0");
                     adapter.setDelivered(message);
-//                    Toast.makeText(activity,"double checklis",Toast.LENGTH_SHORT).show();
-                    //TODO implement on message delivered to server, messaga single check
                 }
             });
         }
     }
 
     @Override
-    public void showMessage(final String nickname, final String message) {
+    public void showMessage(final ResponseFromServer fromServer) {
         activity.runOnUiThread(new Runnable() {
 
             @Override
             public void run() {
-                processMessage(nickname, message, "0");
+                processMessage(fromServer.getSender(), fromServer.getMessage(), "0");
+                RequestToServer toServer = new RequestToServer(MESSAGE_HAS_BEEN_READ,ipAddress,"message has been read",
+                        fromServer.getIpAddressSender(),nickname,fromServer.getIdMessage());
+                myClient.setJsonData(new Gson().toJson(toServer));
             }
         });
+
     }
 
     @Override
     public void connect(boolean success, String response) {
         if (!success){
             disconnecting();
+        }
+    }
+
+    @Override
+    public void hasBeenRead(boolean read, final String id) {
+        if (read){
+            activity.runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    adapter.setHasBeenRead(id);
+                }
+            });
         }
     }
 }

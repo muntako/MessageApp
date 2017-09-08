@@ -84,9 +84,9 @@ public class ConnectingFragment extends Fragment implements Client.onConnectionC
         jsonData = new JSONObject();
         WifiManager wm = (WifiManager) activity.getSystemService(WIFI_SERVICE);
         String ipAddress = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-        RequestToServer toServer = new RequestToServer(REQUEST_CONNECT_CLIENT,ipAddress);
+        RequestToServer toServer = new RequestToServer(REQUEST_CONNECT_CLIENT, ipAddress);
         String request = new Gson().toJson(toServer);
-        if (editTextAddress.getText().length() > 0 && editTextPort.getText().length() > 0 && editTextNickname.getText().length()>0) {
+        if (editTextAddress.getText().length() > 0 && editTextPort.getText().length() > 0 && editTextNickname.getText().length() > 0) {
             myClient = new Client(editTextAddress.getText()
                     .toString(), Integer.parseInt(editTextPort
                     .getText().toString()), request);
@@ -101,15 +101,21 @@ public class ConnectingFragment extends Fragment implements Client.onConnectionC
     }
 
     @Override
-    public void connect(boolean success, String response) {
+    public void connect(final boolean success, final String response) {
         if (dialog != null)
             dialog.dismiss();
-        if (success) {
-            Toast.makeText(activity, "Connected", Toast.LENGTH_SHORT).show();
-            activity.replaceFragment(new ChatRoomFragment());
-        }else {
-            Toast.makeText(activity,response,Toast.LENGTH_SHORT).show();
-        }
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (success) {
+                    Toast.makeText(activity, "Connected", Toast.LENGTH_SHORT).show();
+                    activity.replaceFragment(new ChatRoomFragment());
+                } else {
+                    Toast.makeText(activity, response, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
     }
 
 }

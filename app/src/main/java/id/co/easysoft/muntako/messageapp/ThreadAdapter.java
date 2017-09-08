@@ -1,6 +1,7 @@
 package id.co.easysoft.muntako.messageapp;
 
 import android.content.Context;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -86,6 +87,10 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
 
         if (holder.getItemViewType() == SELF) {
            holder.status.setEnabled(message.isDelivered());
+            if (message.isHasBeenRead()){
+                holder.status.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_done_read));
+            }
+
         }else {
             holder.textViewSender.setText(message.getName());
         }
@@ -109,8 +114,6 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
             textViewTime = (TextView) itemView.findViewById(R.id.textViewTime);
             status = (ImageView) itemView.findViewById(R.id.status);
             textViewSender = (TextView)itemView.findViewById(R.id.TextViewSender);
-
-//            status.setEnabled(false);
         }
 
         onMessageSent onMessageSent;
@@ -150,9 +153,6 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
     public boolean setDelivered(String id) {
         for (int i = 0; i < messages.size(); i++) {
             if ((messages.get(i).getSentAt()+"").equalsIgnoreCase(id)) {
-//                View itemView = parent.getChildAt(i);
-//                ImageView imageView = (ImageView) itemView.findViewById(R.id.status);
-//                imageView.setEnabled(true);
                 messages.get(i).setDelivered(true);
                 notifyDataSetChanged();
             }
@@ -160,5 +160,13 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
         return false;
     }
 
-
+    public boolean setHasBeenRead(String id){
+        for (int i = 0; i < messages.size(); i++) {
+            if ((messages.get(i).getSentAt()+"").equalsIgnoreCase(id)) {
+                messages.get(i).setHasBeenRead(true);
+                notifyDataSetChanged();
+            }
+        }
+        return false;
+    }
 }

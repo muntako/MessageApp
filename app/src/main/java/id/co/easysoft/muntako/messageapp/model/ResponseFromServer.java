@@ -9,8 +9,9 @@ public class ResponseFromServer {
     private boolean success;
     private String sender;
     private String message;
-    private String status;
+    private String responseKey;
     private String idMessage;
+    private String ipAddressSender;
 
     public ResponseFromServer(boolean success, String sender, String message) {
         this.success = success;
@@ -42,12 +43,12 @@ public class ResponseFromServer {
         this.message = message;
     }
 
-    public String getStatus() {
-        return status;
+    public String getResponseKey() {
+        return responseKey;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setResponseKey(String responseKey) {
+        this.responseKey = responseKey;
     }
 
     public String getIdMessage() {
@@ -56,5 +57,13 @@ public class ResponseFromServer {
 
     public void setIdMessage(String idMessage) {
         this.idMessage = idMessage;
+    }
+
+    public String getIpAddressSender() {
+        return ipAddressSender;
+    }
+
+    public void setIpAddressSender(String ipAddressSender) {
+        this.ipAddressSender = ipAddressSender;
     }
 }
