@@ -57,7 +57,6 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         Client.onReceiveMessage,Client.onConnectionChange,Client.onMessageRead{
     //Recyclerview objects
     private RecyclerView recyclerView;
-    private RecyclerView.LayoutManager layoutManager;
     private ThreadAdapter adapter;
 
     //ArrayList of messages to store the thread messages
@@ -84,7 +83,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         //Initializing recyclerview
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerView);
         recyclerView.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(getActivity());
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
         adapter = new ThreadAdapter(activity, messages, 1);
 
@@ -109,12 +108,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     public void onAttach(Context context) {
         super.onAttach(context);
         activity = (MainActivity) context;
-        myClient = activity.getMyClient();
-        myClient.setOnMessageSent(this);
-        myClient.setOnReceiveMessage(this);
-        myClient.setOnMessageRead(this);
-        setHasOptionsMenu(true);
-        nickname = activity.getNickname();
+        setInterface();
     }
 
     void displayDestinationForm() {
@@ -137,6 +131,10 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
     public void onAttach(Activity a) {
         super.onAttach(activity);
         this.activity = (MainActivity) a;
+        setInterface();
+    }
+
+    void setInterface(){
         myClient = activity.getMyClient();
         myClient.setOnMessageSent(this);
         myClient.setOnReceiveMessage(this);
@@ -177,7 +175,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
 
             RequestToServer toServer = new RequestToServer(SEND_MESSAGE_CLIENT,ipAddress,message,ipAddressDestination,nickname,sentAt+"");
             jsonData = new Gson().toJson(toServer);
-            myClient.setJsonData(jsonData);
+            myClient.sendMessage(jsonData);
             myClient.setOnMessageSent(this);
             System.out.println("Request "+toServer);
             messages.add(m);
@@ -257,7 +255,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
                 processMessage(fromServer.getSender(), fromServer.getMessage(), "0");
                 RequestToServer toServer = new RequestToServer(MESSAGE_HAS_BEEN_READ,ipAddress,"message has been read",
                         fromServer.getIpAddressSender(),nickname,fromServer.getIdMessage());
-                myClient.setJsonData(new Gson().toJson(toServer));
+                myClient.sendMessage(new Gson().toJson(toServer));
             }
         });
 

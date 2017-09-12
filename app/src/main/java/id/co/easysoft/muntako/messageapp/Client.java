@@ -60,73 +60,23 @@ public class Client {
         dstAddress = addr;
         dstPort = port;
         jsonData = object;
-        new connecting().execute();
-    }
-
-    Client(String object) {
-        jsonData = object;
         new sendMessage().execute();
     }
 
-    public void setJsonData(String jsonData) {
+    private void connect() {
+        try {
+            socket = new Socket(dstAddress, dstPort);
+            socket.setKeepAlive(true);
+            new Thread(new alwaysListening()).start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void sendMessage(String jsonData) {
         this.jsonData = jsonData;
         new sendMessage().execute();
-    }
-
-    private class connecting extends AsyncTask<Void, Void, Boolean> {
-
-
-        @Override
-        protected Boolean doInBackground(Void... arg0) {
-
-            DataInputStream dataInputStream = null;
-            DataOutputStream dataOutputStream = null;
-
-            try {
-                socket = new Socket(dstAddress, dstPort);
-                socket.setKeepAlive(true);
-                dataOutputStream = new DataOutputStream(
-                        socket.getOutputStream());
-                dataInputStream = new DataInputStream(socket.getInputStream());
-
-                // transfer JSONObject as String to the server
-                dataOutputStream.writeUTF(jsonData);
-                Log.i(TAG, "waiting for response from host" + jsonData);
-
-                // Thread will wait till server replies
-                response = dataInputStream.readUTF();
-                fromServer = new Gson().fromJson(response, ResponseFromServer.class);
-
-                Log.i(TAG, "response " + response);
-                success = fromServer.isSuccess();
-                connected = success;
-
-            } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                response = "UnknownHostException: " + e.toString();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                response = "IOException: " + e.toString();
-            } catch (Exception e) {
-                e.printStackTrace();
-                response = "" + e.toString();
-            }
-            return connected;
-        }
-
-
-        @Override
-        protected void onPostExecute(Boolean aBoolean) {
-            super.onPostExecute(aBoolean);
-            if (success) {
-                onConnectionChange.connect(true, fromServer.getMessage());
-                new Thread(new alwaysListening()).start();
-            } else {
-                onConnectionChange.connect(false, response);
-            }
-        }
     }
 
     private class sendMessage extends AsyncTask<Void, Void, String> {
@@ -136,7 +86,10 @@ public class Client {
             DataOutputStream dataOutputStream = null;
             response = "";
             try {
-                if (socket != null && socket.isConnected() && !socket.isClosed()) {
+                if (socket == null) {
+                    connect();
+                }
+                if (socket.isConnected() && !socket.isClosed()) {
                     dataOutputStream = new DataOutputStream(
                             socket.getOutputStream());
 
