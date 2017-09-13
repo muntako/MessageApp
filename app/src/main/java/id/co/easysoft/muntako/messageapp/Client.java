@@ -59,8 +59,7 @@ public class Client {
     public Client(String addr, int port, String object) {
         dstAddress = addr;
         dstPort = port;
-        jsonData = object;
-        new sendMessage().execute();
+        sendMessage(object);
     }
 
     private void connect() {

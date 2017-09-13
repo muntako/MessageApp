@@ -1,7 +1,6 @@
 package id.co.easysoft.muntako.messageapp;
 
 import android.content.Context;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +19,7 @@ import id.co.easysoft.muntako.messageapp.model.Message;
  *
  */
 //Class extending RecyclerviewAdapter
-public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder> {
+public class ChatThreadAdapter extends RecyclerView.Adapter<ChatThreadAdapter.ViewHolder> {
 
     //user id
     private int userId;
@@ -34,7 +33,7 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
     private ViewGroup parent;
 
     //Constructor
-    public ThreadAdapter(Context context, ArrayList<Message> messages, int userId) {
+    public ChatThreadAdapter(Context context, ArrayList<Message> messages, int userId) {
         this.userId = userId;
         this.messages = messages;
         this.context = context;
@@ -87,7 +86,7 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
 
         if (holder.getItemViewType() == SELF) {
            holder.status.setEnabled(message.isDelivered());
-            if (message.isHasBeenRead()){
+            if (holder.status.isEnabled()&&message.isHasBeenRead()){
                 holder.status.setImageDrawable(context.getResources().getDrawable(R.drawable.ic_done_read));
             }
 
@@ -118,11 +117,11 @@ public class ThreadAdapter extends RecyclerView.Adapter<ThreadAdapter.ViewHolder
 
         onMessageSent onMessageSent;
 
-        public ThreadAdapter.onMessageSent getOnMessageSent() {
+        public ChatThreadAdapter.onMessageSent getOnMessageSent() {
             return onMessageSent;
         }
 
-        public void setOnMessageSent(ThreadAdapter.onMessageSent onMessageSent) {
+        public void setOnMessageSent(ChatThreadAdapter.onMessageSent onMessageSent) {
             this.onMessageSent = onMessageSent;
         }
     }

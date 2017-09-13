@@ -26,6 +26,7 @@ import butterknife.OnClick;
 import id.co.easysoft.muntako.messageapp.Client;
 import id.co.easysoft.muntako.messageapp.MainActivity;
 import id.co.easysoft.muntako.messageapp.R;
+import id.co.easysoft.muntako.messageapp.model.RequestToServer;
 
 import static android.content.Context.WIFI_SERVICE;
 import static id.co.easysoft.muntako.messageapp.Constant.REQUEST_CONNECT_CLIENT;

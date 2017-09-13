@@ -6,16 +6,13 @@ import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.format.Formatter;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,23 +22,17 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.gson.Gson;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 import id.co.easysoft.muntako.messageapp.Client;
-import id.co.easysoft.muntako.messageapp.Client.onConnectionChange;
 import id.co.easysoft.muntako.messageapp.MainActivity;
 import id.co.easysoft.muntako.messageapp.model.Message;
 import id.co.easysoft.muntako.messageapp.R;
-import id.co.easysoft.muntako.messageapp.ThreadAdapter;
+import id.co.easysoft.muntako.messageapp.ChatThreadAdapter;
+import id.co.easysoft.muntako.messageapp.model.RequestToServer;
 import id.co.easysoft.muntako.messageapp.model.ResponseFromServer;
 
 import static android.content.Context.WIFI_SERVICE;
@@ -57,7 +48,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         Client.onReceiveMessage,Client.onConnectionChange,Client.onMessageRead{
     //Recyclerview objects
     private RecyclerView recyclerView;
-    private ThreadAdapter adapter;
+    private ChatThreadAdapter adapter;
 
     //ArrayList of messages to store the thread messages
     private ArrayList<Message> messages = new ArrayList<>();
@@ -85,7 +76,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
         recyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new ThreadAdapter(activity, messages, 1);
+        adapter = new ChatThreadAdapter(activity, messages, 1);
 
         //Initializing message arraylist
         messages = new ArrayList<>();
@@ -145,7 +136,7 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
 
     //This method will fetch all the messages of the thread
     private void fetchMessages() {
-        adapter = new ThreadAdapter(activity, messages, 1);
+        adapter = new ChatThreadAdapter(activity, messages, 1);
         recyclerView.setAdapter(adapter);
         scrollToBottom();
     }
@@ -179,14 +170,12 @@ public class ChatRoomFragment extends Fragment implements View.OnClickListener, 
             myClient.setOnMessageSent(this);
             System.out.println("Request "+toServer);
             messages.add(m);
-            adapter.notifyDataSetChanged();
+//            adapter.notifyDataSetChanged();
 
             scrollToBottom();
-            adapter.setMessages(messages);
+//            adapter.setMessages(messages);
 
             editTextMessage.setText("");
-        } else {
-            return;
         }
     }
 

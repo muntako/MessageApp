@@ -1,4 +1,4 @@
-package id.co.easysoft.muntako.messageapp.Fragment;
+package id.co.easysoft.muntako.messageapp.model;
 
 import com.google.gson.annotations.SerializedName;
 
